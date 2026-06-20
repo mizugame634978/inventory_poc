@@ -37,8 +37,12 @@ class Product:
 
         在庫を下回る出荷は不変条件 (quantity >= 0) を壊すため拒否する。
         """
-        # TODO(human): 出荷ロジックを実装する。
-        #   - amount が 0 以下なら ValueError を送出
-        #   - amount が現在の在庫 quantity を超えるなら InsufficientStockError を送出
-        #   - 問題なければ quantity を減らす
-        raise NotImplementedError
+        # 検証を先に全て済ませてから quantity を変更する。
+        # こうすることで、例外で抜けた場合に在庫が中途半端に減らない(不変条件を守る)。
+        if amount <= 0:
+            raise ValueError("出荷数は正の整数である必要があります")
+        if amount > self.quantity:
+            raise InsufficientStockError(
+                f"在庫不足: 在庫 {self.quantity} に対し {amount} の出荷を要求されました"
+            )
+        self.quantity -= amount
