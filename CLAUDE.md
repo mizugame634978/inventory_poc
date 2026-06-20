@@ -40,6 +40,15 @@
 ## よく使うコマンド
 
 ```bash
-cd server && uv run pytest -q        # テスト(自己検証の中心)
-cd server && uv run fastapi dev app/main.py   # 開発サーバ
+cd server && uv run pytest -q        # サーバのテスト(自己検証の中心)
+cd server && uv run fastapi dev app/main.py   # 開発サーバ(http://localhost:8000)
+cd client && dotnet test             # WPF の ViewModel テスト
+cd client && dotnet build            # クライアント全体のビルド
 ```
+
+## クライアント(WPF)のテスト方針
+
+詳細は `issues/0003-wpf-product-list.md`。要点だけ:
+- ロジックは WPF 非依存の `client/InventoryClient.Core`(ViewModel/APIクライアント)に置く。
+- **ViewModel をユニットテスト**(xUnit + NSubstitute で `IProductApiClient` をモック)。ここが本命。
+- View(XAML)/画面操作の UI 自動化テストは**やらない**(POCではROIが低い)。View を薄く保つことで代替する。
