@@ -41,13 +41,27 @@
 
 - [x] 商品の在庫を入荷/出荷する(在庫非負の不変条件) … issue #0001
 - [x] 商品の登録・一覧 API … issue #0002
-- [ ] WPF クライアントから登録・一覧を表示 … issue #0003(予定)
+- [x] WPF クライアントから登録・一覧を表示 … issue #0003
 - [ ] 入荷/出荷エンドポイント … 予定
 - [ ] 発注 → 入荷 の受発注フロー … 予定
 - [ ] 永続化を SQLite に差し替え … 予定
 - [ ] WPF クライアント(一覧表示 + 入荷/出荷ボタン) … 予定
 
-## 5. 技術選定
+## 5. クライアント(WPF)の構成と思想
+
+テスト容易性のため 3 プロジェクトに分割している(`client/`)。
+
+| プロジェクト | TFM | 役割 | WPF依存 |
+|---|---|---|---|
+| `InventoryClient.Core` | net10.0 | ViewModel・APIクライアント・DTO | なし |
+| `InventoryClient` | net10.0-windows | View(XAML)・App | あり(薄い) |
+| `InventoryClient.Tests` | net10.0 | ViewModel のユニットテスト | なし |
+
+思想: ロジックを WPF 非依存の Core に集約し、ViewModel をテストする。ViewModel は具象 HttpClient ではなく
+`IProductApiClient` に依存する(依存性逆転)ので、テストではモックに差し替えてネットワーク無しで検証できる。
+View は「バインドするだけの薄い層」に保ち、UI 自動化テストはやらない(POCではROIが低い)。
+
+## 6. 技術選定
 
 - **client: WPF (MVVM)** — Windows ネイティブGUI。大規模化に強い。Web技術より情報が少なく研究価値が高い。
 - **server: FastAPI** — POCなので認証/メール/並列処理は入れない。シンプルで素早い。

@@ -4,5 +4,9 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
+# .NET / WPF
+[Bb]in/
+[Oo]bj/
+
 # Claude Code 個人ローカル設定(共有しない)
 .claude/settings.local.json

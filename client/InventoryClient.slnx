@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="InventoryClient.Core/InventoryClient.Core.csproj" />
+  <Project Path="InventoryClient.Tests/InventoryClient.Tests.csproj" />
+  <Project Path="InventoryClient/InventoryClient.csproj" />
+</Solution>
