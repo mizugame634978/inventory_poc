@@ -11,4 +11,8 @@ public interface IProductApiClient
     Task<IReadOnlyList<ProductDto>> ListProductsAsync(CancellationToken ct = default);
 
     Task<ProductDto> RegisterProductAsync(ProductCreateRequest request, CancellationToken ct = default);
+
+    Task<ProductDto> ReceiveAsync(string sku, int amount, CancellationToken ct = default);
+
+    Task<ProductDto> ShipAsync(string sku, int amount, CancellationToken ct = default);
 }

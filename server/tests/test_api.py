@@ -54,3 +54,39 @@ def test_empty_sku_is_422(client):
 def test_negative_quantity_is_422(client):
     res = client.post("/products", json={"sku": "A-1", "name": "ねじ", "quantity": -1})
     assert res.status_code == 422
+
+
+# --- 入荷 / 出荷 (#0006) ---
+def _register(client, sku="A-1", name="ねじ", quantity=0):
+    client.post("/products", json={"sku": sku, "name": name, "quantity": quantity})
+
+
+def test_receive_increases_quantity(client):
+    _register(client, quantity=2)
+    res = client.post("/products/A-1/receive", json={"amount": 3})
+    assert res.status_code == 200
+    assert res.json()["quantity"] == 5
+
+
+def test_ship_decreases_quantity(client):
+    _register(client, quantity=5)
+    res = client.post("/products/A-1/ship", json={"amount": 2})
+    assert res.status_code == 200
+    assert res.json()["quantity"] == 3
+
+
+def test_ship_insufficient_stock_is_409(client):
+    _register(client, quantity=1)
+    res = client.post("/products/A-1/ship", json={"amount": 2})
+    assert res.status_code == 409
+
+
+def test_operation_on_unknown_sku_is_404(client):
+    res = client.post("/products/NOPE/receive", json={"amount": 1})
+    assert res.status_code == 404
+
+
+def test_amount_zero_is_422(client):
+    _register(client, quantity=5)
+    res = client.post("/products/A-1/ship", json={"amount": 0})
+    assert res.status_code == 422
