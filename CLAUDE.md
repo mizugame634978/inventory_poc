@@ -18,6 +18,7 @@
 | データモデル | `docs/data-model.md` | ER・エンティティ・不変条件 |
 | 開発手順 | `docs/workflow.md` | issue→ブランチ→マージの手順 |
 | UIテスト考察 | `docs/ui-testing-comparison.md` | WPF vs React のUI自動テスト比較と課題・改善の種 |
+| 自走ハーネス | `docs/autonomy-harness.md` | 統一チェック・Stop hook・権限・ループの設計と前提 |
 | 作業単位の記録 | `issues/NNNN-*.md` | 1機能=1issue。目的・スコープ・テスト・完了条件 |
 
 新しいセッションで作業を始めるときは、**まず `docs/` を読み、次に対象の `issues/` を読む**こと。
@@ -41,11 +42,15 @@
 ## よく使うコマンド
 
 ```bash
+pwsh -File scripts/check.ps1         # 統一チェック(server pytest + client VMテスト) ← 自走の合図
 cd server && uv run pytest -q        # サーバのテスト(自己検証の中心)
 cd server && uv run fastapi dev app/main.py   # 開発サーバ(http://localhost:8000)
-cd client && dotnet test             # WPF の ViewModel テスト
+cd client && dotnet test             # WPF の全テスト(UIテスト含む。手動で回す)
 cd client && dotnet build            # クライアント全体のビルド
 ```
+
+自走ハーネス(統一チェック・Stop hook・権限)の設計は `docs/autonomy-harness.md`。
+**`inventory_poc` を作業ルートにして claude を起動するとハーネスが有効になる**(設定は launch root 依存)。
 
 ## クライアント(WPF)のテスト方針
 

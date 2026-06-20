@@ -1,3 +1,33 @@
 {
-  "outputStyle": "default"
+  "outputStyle": "default",
+  "permissions": {
+    "allow": [
+      "Bash(uv run pytest*)",
+      "Bash(dotnet test*)",
+      "Bash(dotnet build*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git switch*)",
+      "Bash(git branch*)",
+      "Bash(git merge*)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "powershell",
+            "command": "pwsh -NoProfile -File scripts/stop-check.ps1",
+            "timeout": 120,
+            "statusMessage": "自動チェック実行中..."
+          }
+        ]
+      }
+    ]
+  }
 }
