@@ -38,6 +38,8 @@
 - これらの設定は `inventory_poc/.claude/settings.json` にある。**`inventory_poc` から claude を
   起動したときだけ有効**(設定は launch root から読まれるため)。親 `repos` から起動すると無効。
 - 自走研究としてアプリを触るときは、**`inventory_poc` を作業ルートにして claude を起動する**こと。
+- なぜ起動ディレクトリで効き方が変わるのか(人間向けの詳しい説明)は
+  `docs/claude-code-settings-scope.md` を参照。
 
 ## 6. まだ入れていない / 今後
 - **外側ループの自動駆動**(`/loop` で open issue を連続処理)は未導入。Stop hook で内側ループが
