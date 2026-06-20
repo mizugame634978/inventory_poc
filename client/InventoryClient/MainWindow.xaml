@@ -18,7 +18,7 @@
             <Button Content="登録" Command="{Binding RegisterCommand}" Width="70"/>
         </StackPanel>
         <TextBlock DockPanel.Dock="Bottom" Text="{Binding ErrorMessage}" Foreground="Red" TextWrapping="Wrap" Margin="0,8,0,0"/>
-        <DataGrid ItemsSource="{Binding Products}" AutoGenerateColumns="False" IsReadOnly="True">
+        <DataGrid x:Name="ProductsGrid" ItemsSource="{Binding Products}" AutoGenerateColumns="False" IsReadOnly="True">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="SKU" Binding="{Binding Sku}" Width="140"/>
                 <DataGridTextColumn Header="名前" Binding="{Binding Name}" Width="*"/>

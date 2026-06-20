@@ -42,6 +42,7 @@
 - [x] 商品の在庫を入荷/出荷する(在庫非負の不変条件) … issue #0001
 - [x] 商品の登録・一覧 API … issue #0002
 - [x] WPF クライアントから登録・一覧を表示 … issue #0003
+- [x] WPF UI バインディング健全性テスト … issue #0004
 - [ ] 入荷/出荷エンドポイント … 予定
 - [ ] 発注 → 入荷 の受発注フロー … 予定
 - [ ] 永続化を SQLite に差し替え … 予定
@@ -55,11 +56,16 @@
 |---|---|---|---|
 | `InventoryClient.Core` | net10.0 | ViewModel・APIクライアント・DTO | なし |
 | `InventoryClient` | net10.0-windows | View(XAML)・App | あり(薄い) |
-| `InventoryClient.Tests` | net10.0 | ViewModel のユニットテスト | なし |
+| `InventoryClient.Tests` | net10.0 | ViewModel のユニットテスト(高速・本命) | なし |
+| `InventoryClient.UiTests` | net10.0-windows | UI バインディング健全性テスト | あり |
 
 思想: ロジックを WPF 非依存の Core に集約し、ViewModel をテストする。ViewModel は具象 HttpClient ではなく
 `IProductApiClient` に依存する(依存性逆転)ので、テストではモックに差し替えてネットワーク無しで検証できる。
-View は「バインドするだけの薄い層」に保ち、UI 自動化テストはやらない(POCではROIが低い)。
+View は「バインドするだけの薄い層」に保つ。
+
+UI のデグレ(XAMLバインディング切れ)は ViewModel テストでは捕まらないため、`InventoryClient.UiTests` で
+in-process に Window を `Show()` してバインディングエラーが出ないことを検証する(`Xunit.StaFact`)。
+ただし別プロセス起動の UI 自動化(FlaUI 等)はやらない — 重く脆く、上記で大半のデグレを捕まえられる。
 
 ## 6. 技術選定
 
