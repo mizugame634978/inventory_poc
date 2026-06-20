@@ -1,6 +1,6 @@
 # #0001 出荷時の在庫非負チェックを実装する
 
-- status: open
+- status: done
 - created: 2026-06-20
 
 ## 目的 / 背景
@@ -29,6 +29,7 @@
 検証コマンド: `cd server && uv run pytest -q`(全6件緑)
 
 ## 結果(完了時に追記)
-- done:
-- 要点:
-- commits:
+- done: 2026-06-20
+- 要点: `Product.ship` を実装。「検証を先に済ませてから減算」する順序にし、例外時に
+  quantity を変更しないことで不変条件 (quantity >= 0) を保証。pytest 全6件緑。
+- commits: ブランチ issue-0001-ship-stock-invariant
