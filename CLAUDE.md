@@ -17,6 +17,7 @@
 | 浅く広い全体像 | `docs/architecture.md` | アーキテクチャ・思想・機能全体図 |
 | データモデル | `docs/data-model.md` | ER・エンティティ・不変条件 |
 | 開発手順 | `docs/workflow.md` | issue→ブランチ→マージの手順 |
+| UIテスト考察 | `docs/ui-testing-comparison.md` | WPF vs React のUI自動テスト比較と課題・改善の種 |
 | 作業単位の記録 | `issues/NNNN-*.md` | 1機能=1issue。目的・スコープ・テスト・完了条件 |
 
 新しいセッションで作業を始めるときは、**まず `docs/` を読み、次に対象の `issues/` を読む**こと。
