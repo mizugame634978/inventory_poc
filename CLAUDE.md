@@ -48,7 +48,12 @@ cd client && dotnet build            # クライアント全体のビルド
 
 ## クライアント(WPF)のテスト方針
 
-詳細は `issues/0003-wpf-product-list.md`。要点だけ:
+詳細は `issues/0003-wpf-product-list.md` と `issues/0004-wpf-ui-binding-tests.md`。要点だけ:
 - ロジックは WPF 非依存の `client/InventoryClient.Core`(ViewModel/APIクライアント)に置く。
-- **ViewModel をユニットテスト**(xUnit + NSubstitute で `IProductApiClient` をモック)。ここが本命。
-- View(XAML)/画面操作の UI 自動化テストは**やらない**(POCではROIが低い)。View を薄く保つことで代替する。
+- **ViewModel をユニットテスト**(`InventoryClient.Tests`, xUnit + NSubstitute)。ここが本命・高速。
+- **UI バインディング健全性テスト**(`InventoryClient.UiTests`, `Xunit.StaFact` の `[WpfFact]`)。
+  in-process で Window を `Show()` し、バインディングエラーが出ないことを検証する。XAML のパス誤字など
+  ViewModel テストで捕まらない UI デグレを捕捉する。
+  - 注意: DataGrid の行(セル)を実体化させるには `Show()` が必須。Measure/Arrange だけではセル
+    バインディングが評価されず、列の誤字を見逃す(#0004で確認済み)。
+- 別プロセス起動の UI 自動化(FlaUI/WinAppDriver 等)は**やらない**(重く脆くROIが低い)。

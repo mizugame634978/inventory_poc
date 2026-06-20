@@ -10,12 +10,22 @@ namespace InventoryClient;
 /// </summary>
 public partial class MainWindow : Window
 {
-    public MainWindow()
+    // 実行時用: 既定の実サーバ構成で ViewModel を組み立てる。
+    public MainWindow() : this(CreateDefaultViewModel())
+    {
+    }
+
+    // テスト用: モックを仕込んだ ViewModel を注入できる。
+    public MainWindow(ProductListViewModel viewModel)
     {
         InitializeComponent();
+        DataContext = viewModel;
+    }
 
+    private static ProductListViewModel CreateDefaultViewModel()
+    {
         // POC: サーバは fastapi dev の既定ポート 8000 を想定。
         var http = new HttpClient { BaseAddress = new Uri("http://localhost:8000") };
-        DataContext = new ProductListViewModel(new ProductApiClient(http));
+        return new ProductListViewModel(new ProductApiClient(http));
     }
 }
