@@ -10,16 +10,24 @@ from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.domain import InsufficientStockError, Product
-from app.repository import InMemoryProductRepository, ProductNotFoundError
+from app.repository import (
+    ProductNotFoundError,
+    ProductRepository,
+    SqliteProductRepository,
+)
 
 app = FastAPI(title="inventory_poc")
 
-# POC なのでプロセス内のメモリ保管を 1 つだけ持つ。
-_repository = InMemoryProductRepository()
+# 既定の保管先は SQLite ファイル。fastapi dev は server/ から起動するのでそこに作られる。
+DB_PATH = "inventory.db"
+_repository: ProductRepository | None = None
 
 
-def get_repository() -> InMemoryProductRepository:
-    """リポジトリの依存。テストでは app.dependency_overrides で差し替える。"""
+def get_repository() -> ProductRepository:
+    """リポジトリの依存(抽象に依存する)。テストでは app.dependency_overrides で差し替える。"""
+    global _repository
+    if _repository is None:
+        _repository = SqliteProductRepository(DB_PATH)
     return _repository
 
 
@@ -47,7 +55,7 @@ class StockChange(BaseModel):
 @app.post("/products", response_model=ProductOut, status_code=201)
 def register_product(
     body: ProductCreate,
-    repo: InMemoryProductRepository = Depends(get_repository),
+    repo: ProductRepository = Depends(get_repository),
 ) -> Product:
     # 「同一 SKU は重複登録しない」業務ルール。
     if any(p.sku == body.sku for p in repo.list_all()):
@@ -59,12 +67,12 @@ def register_product(
 
 @app.get("/products", response_model=list[ProductOut])
 def list_products(
-    repo: InMemoryProductRepository = Depends(get_repository),
+    repo: ProductRepository = Depends(get_repository),
 ) -> list[Product]:
     return repo.list_all()
 
 
-def _get_or_404(repo: InMemoryProductRepository, sku: str) -> Product:
+def _get_or_404(repo: ProductRepository, sku: str) -> Product:
     try:
         return repo.get(sku)
     except ProductNotFoundError:
@@ -75,10 +83,11 @@ def _get_or_404(repo: InMemoryProductRepository, sku: str) -> Product:
 def receive_stock(
     sku: str,
     body: StockChange,
-    repo: InMemoryProductRepository = Depends(get_repository),
+    repo: ProductRepository = Depends(get_repository),
 ) -> Product:
     product = _get_or_404(repo, sku)
     product.receive(body.amount)
+    repo.update(product)  # 変更を永続化(メモリ参照に依存しない)
     return product
 
 
@@ -86,7 +95,7 @@ def receive_stock(
 def ship_stock(
     sku: str,
     body: StockChange,
-    repo: InMemoryProductRepository = Depends(get_repository),
+    repo: ProductRepository = Depends(get_repository),
 ) -> Product:
     product = _get_or_404(repo, sku)
     try:
@@ -94,4 +103,5 @@ def ship_stock(
     except InsufficientStockError as e:
         # 在庫不足は「現在の状態と衝突」なので 409 Conflict。
         raise HTTPException(status_code=409, detail=str(e))
+    repo.update(product)  # 変更を永続化(メモリ参照に依存しない)
     return product

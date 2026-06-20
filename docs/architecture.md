@@ -35,7 +35,12 @@
 |---|---|---|---|
 | api | `server/app/main.py` | HTTPの入出力、DTO変換 | domain, repository |
 | domain | `server/app/domain.py` | 業務ルール・不変条件 | (なし=純粋Python) |
-| repository | `server/app/repository.py` | 保管・取得 | domain |
+| repository | `server/app/repository.py` | 保管・取得(抽象 `ProductRepository` + InMemory/SQLite 実装) | domain |
+
+抽象 `ProductRepository`(ABC)に api 層が依存し、実装(メモリ/SQLite)を `Depends` で差し込む。
+#0007 で InMemory→SQLite に差し替えたが **domain.py は無変更** で済んだ(レイヤ分離の実証)。
+注意: SQLite 実装は接続をオペレーション毎に開閉する(スレッドプール実行で安全。`:memory:` は使えない)。
+在庫変更後は `repo.update(product)` で永続化する(メモリ参照に依存しない正しい形)。
 
 ## 4. 機能全体図(ロードマップ)
 
@@ -44,9 +49,8 @@
 - [x] WPF クライアントから登録・一覧を表示 … issue #0003
 - [x] WPF UI バインディング健全性テスト … issue #0004
 - [x] 入荷/出荷の API と UI … issue #0006
+- [x] 永続化を SQLite に差し替え(domain 非依存で実証) … issue #0007
 - [ ] 発注 → 入荷 の受発注フロー … 予定
-- [ ] 永続化を SQLite に差し替え … 予定
-- [ ] WPF クライアント(一覧表示 + 入荷/出荷ボタン) … 予定
 
 ## 5. クライアント(WPF)の構成と思想
 
