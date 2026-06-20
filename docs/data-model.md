@@ -39,3 +39,10 @@ Product 1 ──< OrderLine >── 1 PurchaseOrder (発注)
 |---|---|---|---|
 | 入荷 | `Product.receive(amount)` | quantity += amount | amount <= 0 → ValueError |
 | 出荷 | `Product.ship(amount)` | quantity -= amount | amount <= 0 → ValueError / 在庫超過 → InsufficientStockError |
+
+## API エンドポイント(#0002)
+
+| メソッド | パス | 用途 | 失敗 |
+|---|---|---|---|
+| POST | `/products` | 商品登録 | 重複SKU → 409 / 空sku・負quantity → 422 |
+| GET | `/products` | 商品一覧 | — |
