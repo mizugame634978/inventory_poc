@@ -46,3 +46,5 @@ Product 1 ──< OrderLine >── 1 PurchaseOrder (発注)
 |---|---|---|---|
 | POST | `/products` | 商品登録 | 重複SKU → 409 / 空sku・負quantity → 422 |
 | GET | `/products` | 商品一覧 | — |
+| POST | `/products/{sku}/receive` | 入荷(在庫+) | 商品なし → 404 / amount<1 → 422 |
+| POST | `/products/{sku}/ship` | 出荷(在庫-) | 商品なし → 404 / 在庫不足 → 409 / amount<1 → 422 |

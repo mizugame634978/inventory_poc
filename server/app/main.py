@@ -9,8 +9,8 @@ from __future__ import annotations
 from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.domain import Product
-from app.repository import InMemoryProductRepository
+from app.domain import InsufficientStockError, Product
+from app.repository import InMemoryProductRepository, ProductNotFoundError
 
 app = FastAPI(title="inventory_poc")
 
@@ -38,6 +38,11 @@ class ProductOut(BaseModel):
     quantity: int
 
 
+class StockChange(BaseModel):
+    # 数量は 1 以上。0 以下は domain に届く前にここで 422 として弾く。
+    amount: int = Field(ge=1)
+
+
 # --- エンドポイント ---
 @app.post("/products", response_model=ProductOut, status_code=201)
 def register_product(
@@ -57,3 +62,36 @@ def list_products(
     repo: InMemoryProductRepository = Depends(get_repository),
 ) -> list[Product]:
     return repo.list_all()
+
+
+def _get_or_404(repo: InMemoryProductRepository, sku: str) -> Product:
+    try:
+        return repo.get(sku)
+    except ProductNotFoundError:
+        raise HTTPException(status_code=404, detail=f"SKU '{sku}' は存在しません")
+
+
+@app.post("/products/{sku}/receive", response_model=ProductOut)
+def receive_stock(
+    sku: str,
+    body: StockChange,
+    repo: InMemoryProductRepository = Depends(get_repository),
+) -> Product:
+    product = _get_or_404(repo, sku)
+    product.receive(body.amount)
+    return product
+
+
+@app.post("/products/{sku}/ship", response_model=ProductOut)
+def ship_stock(
+    sku: str,
+    body: StockChange,
+    repo: InMemoryProductRepository = Depends(get_repository),
+) -> Product:
+    product = _get_or_404(repo, sku)
+    try:
+        product.ship(body.amount)
+    except InsufficientStockError as e:
+        # 在庫不足は「現在の状態と衝突」なので 409 Conflict。
+        raise HTTPException(status_code=409, detail=str(e))
+    return product

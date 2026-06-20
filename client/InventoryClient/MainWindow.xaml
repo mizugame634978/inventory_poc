@@ -7,18 +7,27 @@
         mc:Ignorable="d"
         Title="在庫 - 商品一覧" Height="450" Width="720">
     <DockPanel Margin="12">
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
-            <Button Content="読み込み" Command="{Binding LoadCommand}" Width="90" Margin="0,0,12,0"/>
-            <TextBlock Text="SKU" VerticalAlignment="Center" Margin="0,0,4,0"/>
-            <TextBox Text="{Binding NewSku, UpdateSourceTrigger=PropertyChanged}" Width="80" Margin="0,0,8,0"/>
-            <TextBlock Text="名前" VerticalAlignment="Center" Margin="0,0,4,0"/>
-            <TextBox Text="{Binding NewName, UpdateSourceTrigger=PropertyChanged}" Width="120" Margin="0,0,8,0"/>
-            <TextBlock Text="数量" VerticalAlignment="Center" Margin="0,0,4,0"/>
-            <TextBox Text="{Binding NewQuantity, UpdateSourceTrigger=PropertyChanged}" Width="60" Margin="0,0,8,0"/>
-            <Button Content="登録" Command="{Binding RegisterCommand}" Width="70"/>
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                <Button Content="読み込み" Command="{Binding LoadCommand}" Width="90" Margin="0,0,12,0"/>
+                <TextBlock Text="SKU" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                <TextBox Text="{Binding NewSku, UpdateSourceTrigger=PropertyChanged}" Width="80" Margin="0,0,8,0"/>
+                <TextBlock Text="名前" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                <TextBox Text="{Binding NewName, UpdateSourceTrigger=PropertyChanged}" Width="120" Margin="0,0,8,0"/>
+                <TextBlock Text="数量" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                <TextBox Text="{Binding NewQuantity, UpdateSourceTrigger=PropertyChanged}" Width="60" Margin="0,0,8,0"/>
+                <Button Content="登録" Command="{Binding RegisterCommand}" Width="70"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="選択商品の在庫操作" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <TextBlock Text="数量" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                <TextBox Text="{Binding OperationAmount, UpdateSourceTrigger=PropertyChanged}" Width="60" Margin="0,0,8,0"/>
+                <Button Content="入荷" Command="{Binding ReceiveCommand}" Width="70" Margin="0,0,8,0"/>
+                <Button Content="出荷" Command="{Binding ShipCommand}" Width="70"/>
+            </StackPanel>
         </StackPanel>
         <TextBlock DockPanel.Dock="Bottom" Text="{Binding ErrorMessage}" Foreground="Red" TextWrapping="Wrap" Margin="0,8,0,0"/>
-        <DataGrid x:Name="ProductsGrid" ItemsSource="{Binding Products}" AutoGenerateColumns="False" IsReadOnly="True">
+        <DataGrid x:Name="ProductsGrid" ItemsSource="{Binding Products}" SelectedItem="{Binding SelectedProduct}" AutoGenerateColumns="False" IsReadOnly="True">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="SKU" Binding="{Binding Sku}" Width="140"/>
                 <DataGridTextColumn Header="名前" Binding="{Binding Name}" Width="*"/>

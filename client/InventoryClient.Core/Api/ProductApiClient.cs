@@ -26,4 +26,18 @@ public sealed class ProductApiClient : IProductApiClient
         var dto = await response.Content.ReadFromJsonAsync<ProductDto>(ct);
         return dto!;
     }
+
+    public Task<ProductDto> ReceiveAsync(string sku, int amount, CancellationToken ct = default) =>
+        PostStockChangeAsync(sku, "receive", amount, ct);
+
+    public Task<ProductDto> ShipAsync(string sku, int amount, CancellationToken ct = default) =>
+        PostStockChangeAsync(sku, "ship", amount, ct);
+
+    private async Task<ProductDto> PostStockChangeAsync(string sku, string action, int amount, CancellationToken ct)
+    {
+        var response = await _http.PostAsJsonAsync($"/products/{sku}/{action}", new { amount }, ct);
+        response.EnsureSuccessStatusCode();
+        var dto = await response.Content.ReadFromJsonAsync<ProductDto>(ct);
+        return dto!;
+    }
 }
