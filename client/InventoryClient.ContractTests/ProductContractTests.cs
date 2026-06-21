@@ -10,7 +10,8 @@ namespace InventoryClient.ContractTests;
 /// ViewModel テスト(モック)では捕まえられない、JSONフィールド名・型・HTTPステータスのズレを検出する。
 /// 1つのサーバをクラス内テストで共有する(IClassFixture)。テスト間の衝突を避けるため SKU は毎回ユニーク。
 /// </summary>
-public class ProductContractTests : IClassFixture<ServerFixture>
+[Collection("server")]
+public class ProductContractTests
 {
     private readonly ServerFixture _server;
 

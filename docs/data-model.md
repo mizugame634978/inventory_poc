@@ -16,11 +16,22 @@
 └────────────────────────────┘
 ```
 
+```
+┌────────────────────────────────┐
+│ PurchaseOrder (発注) #0014       │
+├────────────────────────────────┤
+│ id       : str  (識別子/PK)      │
+│ sku      : str  (対象商品)       │
+│ quantity : int  (発注数 > 0)     │
+│ status   : ordered | received    │
+└────────────────────────────────┘
+```
+PurchaseOrder.sku は Product.sku を参照(発注は登録済み商品に対してのみ)。
+
 将来(予定):
 
 ```
 Product 1 ──< StockMovement (入出庫履歴)
-Product 1 ──< OrderLine >── 1 PurchaseOrder (発注)
 ```
 
 ## 不変条件(invariants)
@@ -48,3 +59,6 @@ Product 1 ──< OrderLine >── 1 PurchaseOrder (発注)
 | GET | `/products` | 商品一覧 | — |
 | POST | `/products/{sku}/receive` | 入荷(在庫+) | 商品なし → 404 / amount<1 → 422 |
 | POST | `/products/{sku}/ship` | 出荷(在庫-) | 商品なし → 404 / 在庫不足 → 409 / amount<1 → 422 |
+| POST | `/purchase-orders` | 発注(#0014) | 商品なし → 404 / quantity<1 → 422 |
+| GET | `/purchase-orders` | 発注一覧 | — |
+| POST | `/purchase-orders/{id}/receive` | 入荷(在庫+・status=received) | 発注/商品なし → 404 / 二重入荷 → 409 |

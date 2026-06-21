@@ -11,11 +11,21 @@ import os
 from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.domain import InsufficientStockError, Product
+from uuid import uuid4
+
+from app.domain import (
+    AlreadyReceivedError,
+    InsufficientStockError,
+    Product,
+    PurchaseOrder,
+)
 from app.repository import (
     ProductNotFoundError,
     ProductRepository,
+    PurchaseOrderNotFoundError,
+    PurchaseOrderRepository,
     SqliteProductRepository,
+    SqlitePurchaseOrderRepository,
 )
 
 app = FastAPI(title="inventory_poc")
@@ -24,6 +34,7 @@ app = FastAPI(title="inventory_poc")
 # 契約テスト等では INVENTORY_DB でテスト用 DB に差し替えられる。
 DB_PATH = os.environ.get("INVENTORY_DB", "inventory.db")
 _repository: ProductRepository | None = None
+_po_repository: PurchaseOrderRepository | None = None
 
 
 def get_repository() -> ProductRepository:
@@ -32,6 +43,14 @@ def get_repository() -> ProductRepository:
     if _repository is None:
         _repository = SqliteProductRepository(DB_PATH)
     return _repository
+
+
+def get_po_repository() -> PurchaseOrderRepository:
+    """発注リポジトリの依存。テストでは差し替える。"""
+    global _po_repository
+    if _po_repository is None:
+        _po_repository = SqlitePurchaseOrderRepository(DB_PATH)
+    return _po_repository
 
 
 # --- DTO(API の入出力スキーマ。domain とは別物として定義する) ---
@@ -108,3 +127,63 @@ def ship_stock(
         raise HTTPException(status_code=409, detail=str(e))
     repo.update(product)  # 変更を永続化(メモリ参照に依存しない)
     return product
+
+
+# --- 発注(PurchaseOrder)#0014 ---
+class PurchaseOrderCreate(BaseModel):
+    sku: str = Field(min_length=1)
+    quantity: int = Field(ge=1)
+
+
+class PurchaseOrderOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    sku: str
+    quantity: int
+    status: str
+
+
+def _get_po_or_404(po_repo: PurchaseOrderRepository, order_id: str) -> PurchaseOrder:
+    try:
+        return po_repo.get(order_id)
+    except PurchaseOrderNotFoundError:
+        raise HTTPException(status_code=404, detail=f"発注 '{order_id}' は存在しません")
+
+
+@app.post("/purchase-orders", response_model=PurchaseOrderOut, status_code=201)
+def create_purchase_order(
+    body: PurchaseOrderCreate,
+    repo: ProductRepository = Depends(get_repository),
+    po_repo: PurchaseOrderRepository = Depends(get_po_repository),
+) -> PurchaseOrder:
+    _get_or_404(repo, body.sku)  # 発注は登録済み商品に対してのみ
+    order = PurchaseOrder(id=uuid4().hex, sku=body.sku, quantity=body.quantity)
+    po_repo.add(order)
+    return order
+
+
+@app.get("/purchase-orders", response_model=list[PurchaseOrderOut])
+def list_purchase_orders(
+    po_repo: PurchaseOrderRepository = Depends(get_po_repository),
+) -> list[PurchaseOrder]:
+    return po_repo.list_all()
+
+
+@app.post("/purchase-orders/{order_id}/receive", response_model=PurchaseOrderOut)
+def receive_purchase_order(
+    order_id: str,
+    repo: ProductRepository = Depends(get_repository),
+    po_repo: PurchaseOrderRepository = Depends(get_po_repository),
+) -> PurchaseOrder:
+    order = _get_po_or_404(po_repo, order_id)
+    product = _get_or_404(repo, order.sku)
+    # 状態遷移を先に検証(二重入荷を弾く)してから在庫を増やす=副作用前に失敗させる。
+    try:
+        order.mark_received()
+    except AlreadyReceivedError:
+        raise HTTPException(status_code=409, detail="既に入荷済みです")
+    product.receive(order.quantity)
+    repo.update(product)
+    po_repo.update(order)
+    return order

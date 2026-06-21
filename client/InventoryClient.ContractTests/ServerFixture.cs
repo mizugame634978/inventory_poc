@@ -5,6 +5,12 @@ using System.Text;
 
 namespace InventoryClient.ContractTests;
 
+/// <summary>複数のテストクラスで 1 つのサーバを共有するためのコレクション定義。</summary>
+[CollectionDefinition("server")]
+public sealed class ServerCollection : ICollectionFixture<ServerFixture>
+{
+}
+
 /// <summary>
 /// 実際の FastAPI サーバをサブプロセスで起動し、契約テストから使えるようにするフィクスチャ。
 /// 空きポートと一時 DB(INVENTORY_DB)を使うので、他の実行や本番DBと干渉しない。
