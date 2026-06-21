@@ -41,6 +41,10 @@ class ProductRepository(ABC):
     def update(self, product: Product) -> None:
         """既存商品の変更(在庫数など)を保存する。"""
 
+    @abstractmethod
+    def delete(self, sku: str) -> None:
+        """商品を削除する。無ければ ProductNotFoundError。"""
+
 
 class InMemoryProductRepository(ProductRepository):
     """プロセス内メモリ保管。テストや起動直後の動作確認向き。"""
@@ -62,6 +66,11 @@ class InMemoryProductRepository(ProductRepository):
     def update(self, product: Product) -> None:
         # メモリでは同一参照を保持しているため実質 no-op だが、契約として明示しておく。
         self._products[product.sku] = product
+
+    def delete(self, sku: str) -> None:
+        if sku not in self._products:
+            raise ProductNotFoundError(sku)
+        del self._products[sku]
 
 
 class SqliteProductRepository(ProductRepository):
@@ -122,6 +131,13 @@ class SqliteProductRepository(ProductRepository):
                 (product.name, product.quantity, product.sku),
             )
             conn.commit()
+
+    def delete(self, sku: str) -> None:
+        with closing(self._connect()) as conn:
+            cur = conn.execute("DELETE FROM products WHERE sku = ?", (sku,))
+            conn.commit()
+            if cur.rowcount == 0:
+                raise ProductNotFoundError(sku)
 
 
 class PurchaseOrderRepository(ABC):

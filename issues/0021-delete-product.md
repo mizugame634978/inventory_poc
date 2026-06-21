@@ -1,6 +1,6 @@
 # #0021 商品の削除 (DELETE /products/{sku})
 
-- status: open
+- status: done
 - created: 2026-06-21
 
 ## スコープ
@@ -17,6 +17,6 @@
 検証: `pwsh -File scripts/check.ps1` 緑。
 
 ## 結果(完了時に追記)
-- done:
-- 要点:
-- commits:
+- done: 2026-06-21
+- 要点: ProductRepositoryにdelete追加(InMemory/SQLite両実装, rowcountで404)。DELETE /products/{sku}=204。test3件。server pytest 41件緑。/loop自走。
+- commits: ブランチ issue-0021-delete-product

@@ -51,6 +51,16 @@ def test_sqlite_get_missing_raises(tmp_path):
         repo.get("NOPE")
 
 
+def test_sqlite_delete_removes_and_missing_raises(tmp_path):
+    repo = SqliteProductRepository(str(tmp_path / "t.db"))
+    repo.add(Product(sku="A-1", name="ねじ", quantity=1))
+    repo.delete("A-1")
+    with pytest.raises(ProductNotFoundError):
+        repo.get("A-1")
+    with pytest.raises(ProductNotFoundError):
+        repo.delete("A-1")
+
+
 def test_api_works_against_sqlite_implementation(tmp_path):
     """api 層をそのままに、保管だけ SQLite に差し替えても業務フローが通る(差し替え可能性の証明)。"""
     repo = SqliteProductRepository(str(tmp_path / "api.db"))

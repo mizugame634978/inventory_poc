@@ -142,6 +142,15 @@ def rename_product(
     return product
 
 
+@app.delete("/products/{sku}", status_code=204)
+def delete_product(
+    sku: str,
+    repo: ProductRepository = Depends(get_repository),
+) -> None:
+    _get_or_404(repo, sku)  # 無ければ 404
+    repo.delete(sku)
+
+
 @app.post("/products/{sku}/receive", response_model=ProductOut)
 def receive_stock(
     sku: str,
