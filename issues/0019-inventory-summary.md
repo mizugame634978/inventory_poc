@@ -1,6 +1,6 @@
 # #0019 在庫サマリ API (GET /products/summary)
 
-- status: open
+- status: done
 - created: 2026-06-21
 
 ## 目的 / 背景
@@ -23,6 +23,8 @@
 検証: `pwsh -File scripts/check.ps1` が緑
 
 ## 結果(完了時に追記)
-- done:
-- 要点:
-- commits:
+- done: 2026-06-21
+- 要点: `GET /products/summary`(InventorySummaryOut)を `/products/{sku}` より前に登録(route順の罠回避)。
+  空=0/0、2商品(2,3)=count2/total5 のテスト2件。server pytest 35件・check.ps1 緑。
+  /loop 自己ペースの自走サイクルで実装。
+- commits: ブランチ issue-0019-inventory-summary

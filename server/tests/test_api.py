@@ -56,6 +56,20 @@ def test_negative_quantity_is_422(client):
     assert res.status_code == 422
 
 
+# --- 在庫サマリ (#0019) ---
+def test_summary_empty_is_zero(client):
+    res = client.get("/products/summary")
+    assert res.status_code == 200
+    assert res.json() == {"product_count": 0, "total_quantity": 0}
+
+
+def test_summary_counts_and_sums(client):
+    client.post("/products", json={"sku": "A-1", "name": "ねじ", "quantity": 2})
+    client.post("/products", json={"sku": "B-2", "name": "ボルト", "quantity": 3})
+    res = client.get("/products/summary")
+    assert res.json() == {"product_count": 2, "total_quantity": 5}
+
+
 # --- 単一商品取得 (#0018) ---
 def test_get_single_product_returns_it(client):
     client.post("/products", json={"sku": "A-1", "name": "ねじ", "quantity": 4})
