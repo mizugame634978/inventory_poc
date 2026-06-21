@@ -50,7 +50,8 @@
 - [x] WPF UI バインディング健全性テスト … issue #0004
 - [x] 入荷/出荷の API と UI … issue #0006
 - [x] 永続化を SQLite に差し替え(domain 非依存で実証) … issue #0007
-- [ ] 発注 → 入荷 の受発注フロー … 予定
+- [x] APIクライアント↔サーバの契約テスト … issue #0013
+- [ ] 発注 → 入荷 の受発注フロー … 予定(次)
 - [ ] (backlog) memory スナップショットスクリプト … issue #0012(後回し)
 
 ## 5. クライアント(WPF)の構成と思想
@@ -63,6 +64,7 @@
 | `InventoryClient` | net10.0-windows | View(XAML)・App | あり(薄い) |
 | `InventoryClient.Tests` | net10.0 | ViewModel のユニットテスト(高速・本命) | なし |
 | `InventoryClient.UiTests` | net10.0-windows | UI バインディング健全性テスト | あり |
+| `InventoryClient.ContractTests` | net10.0 | 実サーバ相手の契約テスト(明示実行・python/uv必要) | なし |
 
 思想: ロジックを WPF 非依存の Core に集約し、ViewModel をテストする。ViewModel は具象 HttpClient ではなく
 `IProductApiClient` に依存する(依存性逆転)ので、テストではモックに差し替えてネットワーク無しで検証できる。

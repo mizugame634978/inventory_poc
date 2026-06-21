@@ -57,8 +57,9 @@
 pwsh -File scripts/check.ps1         # 統一チェック(server pytest + client VMテスト) ← 自走の合図
 cd server && uv run pytest -q        # サーバのテスト(自己検証の中心)
 cd server && uv run fastapi dev app/main.py   # 開発サーバ(http://localhost:8000)
-cd client && dotnet test             # WPF の全テスト(UIテスト含む。手動で回す)
+cd client && dotnet test             # WPF の全テスト(UI・契約テスト含む。手動で回す)
 cd client && dotnet build            # クライアント全体のビルド
+cd client && dotnet test InventoryClient.ContractTests  # 契約テスト(python/uv必要・実サーバ起動。高速ループ外)
 ```
 
 自走ハーネス(統一チェック・Stop hook・権限)の設計は `docs/autonomy-harness.md`。
