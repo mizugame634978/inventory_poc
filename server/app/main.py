@@ -221,6 +221,14 @@ def list_purchase_orders(
     return po_repo.list_all()
 
 
+@app.get("/purchase-orders/{order_id}", response_model=PurchaseOrderOut)
+def get_purchase_order(
+    order_id: str,
+    po_repo: PurchaseOrderRepository = Depends(get_po_repository),
+) -> PurchaseOrder:
+    return _get_po_or_404(po_repo, order_id)
+
+
 @app.post("/purchase-orders/{order_id}/receive", response_model=PurchaseOrderOut)
 def receive_purchase_order(
     order_id: str,

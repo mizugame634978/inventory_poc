@@ -1,6 +1,6 @@
 # #0025 単一発注取得 (GET /purchase-orders/{id})
 
-- status: open
+- status: done
 - created: 2026-06-21
 
 ## スコープ
@@ -15,6 +15,6 @@
 検証: `pwsh -File scripts/check.ps1` 緑。
 
 ## 結果(完了時に追記)
-- done:
-- 要点:
-- commits:
+- done: 2026-06-21
+- 要点: GET /purchase-orders/{id}(_get_po_or_404再利用)。test2件。server pytest 50件緑。受け入れテスト有りのため自走で実装。
+- commits: ブランチ issue-0025-get-single-order

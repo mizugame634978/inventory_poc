@@ -154,6 +154,24 @@ def test_cancel_unknown_is_404(client):
     assert c.post("/purchase-orders/UNKNOWN/cancel").status_code == 404
 
 
+def test_get_single_order_returns_it(client):
+    c, products = client
+    _register_product(products)
+    order = c.post("/purchase-orders", json={"sku": "A-1", "quantity": 3}).json()
+    res = c.get(f"/purchase-orders/{order['id']}")
+    assert res.status_code == 200
+    body = res.json()
+    assert body["id"] == order["id"]
+    assert body["sku"] == "A-1"
+    assert body["quantity"] == 3
+    assert body["status"] == "ordered"
+
+
+def test_get_unknown_order_is_404(client):
+    c, _ = client
+    assert c.get("/purchase-orders/UNKNOWN").status_code == 404
+
+
 def test_list_orders(client):
     c, products = client
     _register_product(products)
