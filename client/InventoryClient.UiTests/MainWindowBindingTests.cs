@@ -115,4 +115,48 @@ public class MainWindowBindingTests
             PresentationTraceSources.DataBindingSource.Listeners.Remove(listener);
         }
     }
+
+    [WpfFact]
+    public async Task Selecting_a_tab_auto_loads_its_data()
+    {
+        var productApi = Substitute.For<IProductApiClient>();
+        productApi.ListProductsAsync().Returns(new List<ProductDto> { new("A-1", "ねじ", 5) });
+        var orderApi = Substitute.For<IPurchaseOrderApiClient>();
+        orderApi.ListOrdersAsync().Returns(new List<PurchaseOrderDto>());
+        var vm = new MainViewModel(
+            new ProductListViewModel(productApi),
+            new PurchaseOrderViewModel(orderApi));
+
+        MainWindow? window = null;
+        try
+        {
+            window = new MainWindow(vm)
+            {
+                Width = 760,
+                Height = 480,
+                WindowStartupLocation = WindowStartupLocation.Manual,
+                Left = -10000,
+                Top = -10000,
+                ShowInTaskbar = false,
+            };
+            window.Show();
+            DrainDispatcher();
+            DrainDispatcher();
+
+            // 起動時、最初のタブ(商品)が手押しなしで自動読み込みされる
+            Assert.Single(vm.Products.Products);
+
+            // 発注タブに切り替えると、発注が自動読み込みされる
+            var tabs = (TabControl)window.FindName("MainTabs")!;
+            tabs.SelectedIndex = 1;
+            DrainDispatcher();
+            DrainDispatcher();
+
+            await orderApi.Received().ListOrdersAsync();
+        }
+        finally
+        {
+            window?.Close();
+        }
+    }
 }

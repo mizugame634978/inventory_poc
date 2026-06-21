@@ -10,7 +10,7 @@ namespace InventoryClient.Core.ViewModels;
 /// 発注画面の状態とふるまい。発注の一覧・新規発注・選択発注の入荷を扱う。
 /// ProductListViewModel と同じく WPF 非依存で、テストから直接検証できる。
 /// </summary>
-public partial class PurchaseOrderViewModel : ObservableObject
+public partial class PurchaseOrderViewModel : ObservableObject, IRefreshableViewModel
 {
     private readonly IPurchaseOrderApiClient _api;
 
