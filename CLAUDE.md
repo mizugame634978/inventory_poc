@@ -20,6 +20,7 @@
 | UIテスト考察 | `docs/ui-testing-comparison.md` | WPF vs React のUI自動テスト比較と課題・改善の種 |
 | 自走ハーネス | `docs/autonomy-harness.md` | 統一チェック・Stop hook・権限・ループの設計と前提 |
 | ループ実験結果 | `docs/loop-experiment-findings.md` | /loop 自走の効くところ/限界の観察 |
+| 技術選定の振り返り | `docs/library-choices.md` | 指定外ライブラリの選定理由・代替案・Prism比較 |
 | 作業単位の記録 | `issues/NNNN-*.md` | 1機能=1issue。目的・スコープ・テスト・完了条件 |
 
 新しいセッションで作業を始めるときは、**まず `docs/` を読み、次に対象の `issues/` を読む**こと。
