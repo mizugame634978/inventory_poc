@@ -11,11 +11,15 @@ import sqlite3
 from abc import ABC, abstractmethod
 from contextlib import closing
 
-from app.domain import Product
+from app.domain import Product, PurchaseOrder, PurchaseOrderStatus
 
 
 class ProductNotFoundError(Exception):
     """指定された SKU の商品が存在しないときに送出する。"""
+
+
+class PurchaseOrderNotFoundError(Exception):
+    """指定された ID の発注が存在しないときに送出する。"""
 
 
 class ProductRepository(ABC):
@@ -116,5 +120,104 @@ class SqliteProductRepository(ProductRepository):
             conn.execute(
                 "UPDATE products SET name = ?, quantity = ? WHERE sku = ?",
                 (product.name, product.quantity, product.sku),
+            )
+            conn.commit()
+
+
+class PurchaseOrderRepository(ABC):
+    """発注の保管契約。"""
+
+    @abstractmethod
+    def add(self, order: PurchaseOrder) -> None: ...
+
+    @abstractmethod
+    def get(self, order_id: str) -> PurchaseOrder:
+        """ID で 1 件取得。無ければ PurchaseOrderNotFoundError。"""
+
+    @abstractmethod
+    def list_all(self) -> list[PurchaseOrder]: ...
+
+    @abstractmethod
+    def update(self, order: PurchaseOrder) -> None: ...
+
+
+class InMemoryPurchaseOrderRepository(PurchaseOrderRepository):
+    def __init__(self) -> None:
+        self._orders: dict[str, PurchaseOrder] = {}
+
+    def add(self, order: PurchaseOrder) -> None:
+        self._orders[order.id] = order
+
+    def get(self, order_id: str) -> PurchaseOrder:
+        if order_id not in self._orders:
+            raise PurchaseOrderNotFoundError(order_id)
+        return self._orders[order_id]
+
+    def list_all(self) -> list[PurchaseOrder]:
+        return list(self._orders.values())
+
+    def update(self, order: PurchaseOrder) -> None:
+        self._orders[order.id] = order
+
+
+class SqlitePurchaseOrderRepository(PurchaseOrderRepository):
+    """発注を SQLite に保管。Product と同じ DB ファイルの別テーブルを使う。"""
+
+    def __init__(self, db_path: str) -> None:
+        self._db_path = db_path
+        self._ensure_schema()
+
+    def _connect(self) -> sqlite3.Connection:
+        return sqlite3.connect(self._db_path)
+
+    def _ensure_schema(self) -> None:
+        with closing(self._connect()) as conn:
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS purchase_orders (
+                    id TEXT PRIMARY KEY,
+                    sku TEXT NOT NULL,
+                    quantity INTEGER NOT NULL,
+                    status TEXT NOT NULL
+                )
+                """
+            )
+            conn.commit()
+
+    def add(self, order: PurchaseOrder) -> None:
+        with closing(self._connect()) as conn:
+            conn.execute(
+                "INSERT INTO purchase_orders (id, sku, quantity, status) VALUES (?, ?, ?, ?)",
+                (order.id, order.sku, order.quantity, order.status.value),
+            )
+            conn.commit()
+
+    def get(self, order_id: str) -> PurchaseOrder:
+        with closing(self._connect()) as conn:
+            row = conn.execute(
+                "SELECT id, sku, quantity, status FROM purchase_orders WHERE id = ?",
+                (order_id,),
+            ).fetchone()
+        if row is None:
+            raise PurchaseOrderNotFoundError(order_id)
+        return PurchaseOrder(
+            id=row[0], sku=row[1], quantity=row[2], status=PurchaseOrderStatus(row[3])
+        )
+
+    def list_all(self) -> list[PurchaseOrder]:
+        with closing(self._connect()) as conn:
+            rows = conn.execute(
+                "SELECT id, sku, quantity, status FROM purchase_orders ORDER BY id"
+            ).fetchall()
+        return [
+            PurchaseOrder(id=r[0], sku=r[1], quantity=r[2], status=PurchaseOrderStatus(r[3]))
+            for r in rows
+        ]
+
+    def update(self, order: PurchaseOrder) -> None:
+        with closing(self._connect()) as conn:
+            conn.execute(
+                "UPDATE purchase_orders SET sku = ?, quantity = ?, status = ? WHERE id = ?",
+                (order.sku, order.quantity, order.status.value, order.id),
             )
             conn.commit()

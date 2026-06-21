@@ -7,11 +7,16 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from enum import Enum
 
 
 class InsufficientStockError(Exception):
     """在庫を超える出荷を要求されたときに送出する。"""
+
+
+class AlreadyReceivedError(Exception):
+    """既に入荷済みの発注を再度入荷しようとしたときに送出する。"""
 
 
 @dataclass
@@ -46,3 +51,33 @@ class Product:
                 f"在庫不足: 在庫 {self.quantity} に対し {amount} の出荷を要求されました"
             )
         self.quantity -= amount
+
+
+class PurchaseOrderStatus(str, Enum):
+    """発注の状態。str を継承しているので JSON では "ordered"/"received" になる。"""
+
+    ORDERED = "ordered"
+    RECEIVED = "received"
+
+
+@dataclass
+class PurchaseOrder:
+    """発注。発注(ordered)してから入荷(received)に一度だけ遷移できる。
+
+    不変条件: quantity > 0 / received からは再遷移しない(二重入荷の禁止)。
+    """
+
+    id: str
+    sku: str
+    quantity: int
+    status: PurchaseOrderStatus = field(default=PurchaseOrderStatus.ORDERED)
+
+    def __post_init__(self) -> None:
+        if self.quantity <= 0:
+            raise ValueError("発注数は正の整数である必要があります")
+
+    def mark_received(self) -> None:
+        """入荷済みにする。既に入荷済みなら AlreadyReceivedError。"""
+        if self.status is PurchaseOrderStatus.RECEIVED:
+            raise AlreadyReceivedError(self.id)
+        self.status = PurchaseOrderStatus.RECEIVED
