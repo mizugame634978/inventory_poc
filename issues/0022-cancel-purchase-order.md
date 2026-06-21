@@ -1,6 +1,6 @@
 # #0022 発注のキャンセル (POST /purchase-orders/{id}/cancel)
 
-- status: open
+- status: done
 - created: 2026-06-21
 
 ## ドメイン設計
@@ -24,6 +24,6 @@
 検証: `pwsh -File scripts/check.ps1` 緑。
 
 ## 結果(完了時に追記)
-- done:
-- 要点:
-- commits:
+- done: 2026-06-21
+- 要点: PurchaseOrderStatus.CANCELLED と InvalidOrderStateError を追加。cancel()=ordered限定、mark_received()もordered限定に拡張。POST .../cancel エンドポイント(409/404)。domain3件+api4件のtest。server pytest 48件緑。/loop自走。
+- commits: ブランチ issue-0022-cancel-purchase-order

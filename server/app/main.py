@@ -16,6 +16,7 @@ from uuid import uuid4
 from app.domain import (
     AlreadyReceivedError,
     InsufficientStockError,
+    InvalidOrderStateError,
     Product,
     PurchaseOrder,
 )
@@ -233,7 +234,23 @@ def receive_purchase_order(
         order.mark_received()
     except AlreadyReceivedError:
         raise HTTPException(status_code=409, detail="既に入荷済みです")
+    except InvalidOrderStateError as e:
+        raise HTTPException(status_code=409, detail=str(e))
     product.receive(order.quantity)
     repo.update(product)
+    po_repo.update(order)
+    return order
+
+
+@app.post("/purchase-orders/{order_id}/cancel", response_model=PurchaseOrderOut)
+def cancel_purchase_order(
+    order_id: str,
+    po_repo: PurchaseOrderRepository = Depends(get_po_repository),
+) -> PurchaseOrder:
+    order = _get_po_or_404(po_repo, order_id)
+    try:
+        order.cancel()
+    except InvalidOrderStateError as e:
+        raise HTTPException(status_code=409, detail=str(e))
     po_repo.update(order)
     return order

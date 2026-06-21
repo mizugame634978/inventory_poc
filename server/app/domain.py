@@ -19,6 +19,10 @@ class AlreadyReceivedError(Exception):
     """既に入荷済みの発注を再度入荷しようとしたときに送出する。"""
 
 
+class InvalidOrderStateError(Exception):
+    """発注がその操作を許さない状態のときに送出する(例: キャンセル不可・入荷不可)。"""
+
+
 @dataclass
 class Product:
     """在庫を持つ商品。
@@ -58,6 +62,7 @@ class PurchaseOrderStatus(str, Enum):
 
     ORDERED = "ordered"
     RECEIVED = "received"
+    CANCELLED = "cancelled"
 
 
 @dataclass
@@ -77,7 +82,17 @@ class PurchaseOrder:
             raise ValueError("発注数は正の整数である必要があります")
 
     def mark_received(self) -> None:
-        """入荷済みにする。既に入荷済みなら AlreadyReceivedError。"""
+        """入荷済みにする。ordered のときのみ可。"""
         if self.status is PurchaseOrderStatus.RECEIVED:
             raise AlreadyReceivedError(self.id)
+        if self.status is PurchaseOrderStatus.CANCELLED:
+            raise InvalidOrderStateError(f"キャンセル済みの発注 {self.id} は入荷できません")
         self.status = PurchaseOrderStatus.RECEIVED
+
+    def cancel(self) -> None:
+        """キャンセルする。ordered のときのみ可。received/cancelled からは不可。"""
+        if self.status is not PurchaseOrderStatus.ORDERED:
+            raise InvalidOrderStateError(
+                f"発注 {self.id} はキャンセルできません(状態: {self.status.value})"
+            )
+        self.status = PurchaseOrderStatus.CANCELLED
