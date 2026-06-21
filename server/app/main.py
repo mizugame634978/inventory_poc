@@ -101,6 +101,14 @@ def _get_or_404(repo: ProductRepository, sku: str) -> Product:
         raise HTTPException(status_code=404, detail=f"SKU '{sku}' は存在しません")
 
 
+@app.get("/products/{sku}", response_model=ProductOut)
+def get_product(
+    sku: str,
+    repo: ProductRepository = Depends(get_repository),
+) -> Product:
+    return _get_or_404(repo, sku)
+
+
 @app.post("/products/{sku}/receive", response_model=ProductOut)
 def receive_stock(
     sku: str,

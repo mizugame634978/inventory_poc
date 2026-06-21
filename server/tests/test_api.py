@@ -56,6 +56,19 @@ def test_negative_quantity_is_422(client):
     assert res.status_code == 422
 
 
+# --- 単一商品取得 (#0018) ---
+def test_get_single_product_returns_it(client):
+    client.post("/products", json={"sku": "A-1", "name": "ねじ", "quantity": 4})
+    res = client.get("/products/A-1")
+    assert res.status_code == 200
+    assert res.json() == {"sku": "A-1", "name": "ねじ", "quantity": 4}
+
+
+def test_get_unknown_product_is_404(client):
+    res = client.get("/products/NOPE")
+    assert res.status_code == 404
+
+
 # --- 入荷 / 出荷 (#0006) ---
 def _register(client, sku="A-1", name="ねじ", quantity=0):
     client.post("/products", json={"sku": sku, "name": name, "quantity": quantity})
