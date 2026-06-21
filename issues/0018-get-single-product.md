@@ -1,6 +1,6 @@
 # #0018 単一商品取得 API (GET /products/{sku})
 
-- status: open
+- status: done
 - created: 2026-06-21
 
 ## 目的 / 背景
@@ -21,6 +21,7 @@ pytest で完全に検証できる(外側ループの自走対象として適切
 検証: `pwsh -File scripts/check.ps1` が緑
 
 ## 結果(完了時に追記)
-- done:
-- 要点:
-- commits:
+- done: 2026-06-21
+- 要点: `GET /products/{sku}` を追加(_get_or_404 再利用)。test_api.py に 200/404 の2件追加。
+  server pytest 33件・check.ps1 緑。外側ループの1サイクル監視デモとして手動実行。
+- commits: ブランチ issue-0018-get-single-product
