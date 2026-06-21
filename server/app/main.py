@@ -6,6 +6,8 @@
 
 from __future__ import annotations
 
+import os
+
 from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -19,7 +21,8 @@ from app.repository import (
 app = FastAPI(title="inventory_poc")
 
 # 既定の保管先は SQLite ファイル。fastapi dev は server/ から起動するのでそこに作られる。
-DB_PATH = "inventory.db"
+# 契約テスト等では INVENTORY_DB でテスト用 DB に差し替えられる。
+DB_PATH = os.environ.get("INVENTORY_DB", "inventory.db")
 _repository: ProductRepository | None = None
 
 
