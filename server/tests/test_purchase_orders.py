@@ -6,7 +6,12 @@ api テストは各テスト独立の InMemory リポジトリ(商品・発注�
 import pytest
 from fastapi.testclient import TestClient
 
-from app.domain import AlreadyReceivedError, PurchaseOrder, PurchaseOrderStatus
+from app.domain import (
+    AlreadyReceivedError,
+    InvalidOrderStateError,
+    PurchaseOrder,
+    PurchaseOrderStatus,
+)
 from app.main import app, get_po_repository, get_repository
 from app.repository import (
     InMemoryProductRepository,
@@ -37,6 +42,26 @@ def test_mark_received_twice_raises():
 def test_purchase_order_quantity_must_be_positive():
     with pytest.raises(ValueError):
         PurchaseOrder(id="x", sku="A-1", quantity=0)
+
+
+def test_cancel_sets_cancelled():
+    po = PurchaseOrder(id="x", sku="A-1", quantity=3)
+    po.cancel()
+    assert po.status is PurchaseOrderStatus.CANCELLED
+
+
+def test_cancel_received_raises():
+    po = PurchaseOrder(id="x", sku="A-1", quantity=3)
+    po.mark_received()
+    with pytest.raises(InvalidOrderStateError):
+        po.cancel()
+
+
+def test_receive_cancelled_raises():
+    po = PurchaseOrder(id="x", sku="A-1", quantity=3)
+    po.cancel()
+    with pytest.raises(InvalidOrderStateError):
+        po.mark_received()
 
 
 # --- api ---
@@ -97,6 +122,36 @@ def test_receive_unknown_order_is_404(client):
     c, _ = client
     res = c.post("/purchase-orders/UNKNOWN/receive")
     assert res.status_code == 404
+
+
+def test_cancel_order_200(client):
+    c, products = client
+    _register_product(products)
+    order_id = c.post("/purchase-orders", json={"sku": "A-1", "quantity": 3}).json()["id"]
+    res = c.post(f"/purchase-orders/{order_id}/cancel")
+    assert res.status_code == 200
+    assert res.json()["status"] == "cancelled"
+
+
+def test_cancel_received_is_409(client):
+    c, products = client
+    _register_product(products, quantity=0)
+    order_id = c.post("/purchase-orders", json={"sku": "A-1", "quantity": 3}).json()["id"]
+    c.post(f"/purchase-orders/{order_id}/receive")
+    assert c.post(f"/purchase-orders/{order_id}/cancel").status_code == 409
+
+
+def test_receive_cancelled_is_409(client):
+    c, products = client
+    _register_product(products, quantity=0)
+    order_id = c.post("/purchase-orders", json={"sku": "A-1", "quantity": 3}).json()["id"]
+    c.post(f"/purchase-orders/{order_id}/cancel")
+    assert c.post(f"/purchase-orders/{order_id}/receive").status_code == 409
+
+
+def test_cancel_unknown_is_404(client):
+    c, _ = client
+    assert c.post("/purchase-orders/UNKNOWN/cancel").status_code == 404
 
 
 def test_list_orders(client):
