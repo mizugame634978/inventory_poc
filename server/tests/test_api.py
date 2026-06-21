@@ -56,6 +56,17 @@ def test_negative_quantity_is_422(client):
     assert res.status_code == 422
 
 
+# --- 商品の削除 (#0021) ---
+def test_delete_product_then_404(client):
+    client.post("/products", json={"sku": "A-1", "name": "ねじ"})
+    assert client.delete("/products/A-1").status_code == 204
+    assert client.get("/products/A-1").status_code == 404
+
+
+def test_delete_unknown_is_404(client):
+    assert client.delete("/products/NOPE").status_code == 404
+
+
 # --- 商品名の変更 (#0020) ---
 def test_rename_product_updates_name(client):
     client.post("/products", json={"sku": "A-1", "name": "ねじ", "quantity": 1})
