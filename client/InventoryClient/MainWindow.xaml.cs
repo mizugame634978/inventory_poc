@@ -16,16 +16,18 @@ public partial class MainWindow : Window
     }
 
     // テスト用: モックを仕込んだ ViewModel を注入できる。
-    public MainWindow(ProductListViewModel viewModel)
+    public MainWindow(MainViewModel viewModel)
     {
         InitializeComponent();
         DataContext = viewModel;
     }
 
-    private static ProductListViewModel CreateDefaultViewModel()
+    private static MainViewModel CreateDefaultViewModel()
     {
-        // POC: サーバは fastapi dev の既定ポート 8000 を想定。
+        // POC: サーバは fastapi dev の既定ポート 8000 を想定。商品・発注で HttpClient を共有する。
         var http = new HttpClient { BaseAddress = new Uri("http://localhost:8000") };
-        return new ProductListViewModel(new ProductApiClient(http));
+        var products = new ProductListViewModel(new ProductApiClient(http));
+        var orders = new PurchaseOrderViewModel(new PurchaseOrderApiClient(http));
+        return new MainViewModel(products, orders);
     }
 }
