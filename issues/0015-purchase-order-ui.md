@@ -1,6 +1,6 @@
 # #0015 発注→入荷フローの WPF UI
 
-- status: open
+- status: done
 - created: 2026-06-21
 
 ## 目的 / 背景
@@ -19,6 +19,11 @@
 - 発注→入荷が画面操作で通る(実起動確認は別途)
 
 ## 結果(完了時に追記)
-- done:
-- 要点:
-- commits:
+- done: 2026-06-21
+- 要点: `PurchaseOrderViewModel`(一覧/発注作成/入荷、失敗時は再読込しない)と、両VMを束ねる
+  `MainViewModel` を追加。MainWindow を TabControl(商品/発注タブ)化し ctor を MainViewModel 受け取りに変更。
+  ViewModel テスト 13件(PO分6件)、UIバインディング健全性テストは両タブを巡回して検査するよう更新し、
+  発注タブの列バインディングをわざと壊して検出することも確認(teeth-check)。check.ps1 緑・全体ビルド成功。
+- 同居方法: タブ。商品/発注を別タブに分離。
+- 既知の割り切り: 発注入荷後に商品タブの在庫は自動更新しない(商品タブで「読み込み」が必要)。
+- commits: ブランチ issue-0015-purchase-order-ui

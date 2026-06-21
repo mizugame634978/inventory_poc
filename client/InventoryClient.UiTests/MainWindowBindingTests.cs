@@ -14,6 +14,7 @@ namespace InventoryClient.UiTests;
 /// <summary>
 /// in-process の UI テスト。Window を実際に生成しレイアウトを走らせ、
 /// XAML バインディングが壊れていないことを検証する(ViewModel テストでは捕まえられない劣化)。
+/// タブごとに表示を切り替えて、両タブのバインディングを実体化させて検査する。
 /// </summary>
 public class MainWindowBindingTests
 {
@@ -33,11 +34,22 @@ public class MainWindowBindingTests
         }
     }
 
-    private static ProductListViewModel CreateViewModelWith(params ProductDto[] products)
+    private static MainViewModel CreateMainViewModel()
     {
-        var api = Substitute.For<IProductApiClient>();
-        api.ListProductsAsync().Returns(products.ToList());
-        return new ProductListViewModel(api);
+        var productApi = Substitute.For<IProductApiClient>();
+        productApi.ListProductsAsync().Returns(new List<ProductDto>
+        {
+            new("A-1", "ねじ", 5),
+            new("B-2", "ボルト", 0),
+        });
+        var orderApi = Substitute.For<IPurchaseOrderApiClient>();
+        orderApi.ListOrdersAsync().Returns(new List<PurchaseOrderDto>
+        {
+            new("id1", "A-1", 3, "ordered"),
+        });
+        return new MainViewModel(
+            new ProductListViewModel(productApi),
+            new PurchaseOrderViewModel(orderApi));
     }
 
     /// <summary>残った Dispatcher 作業を処理してレイアウト/バインディングを確定させる。</summary>
@@ -50,7 +62,7 @@ public class MainWindowBindingTests
     }
 
     [WpfFact]
-    public async Task Loaded_grid_shows_expected_rows_with_no_binding_errors()
+    public async Task Both_tabs_bind_without_errors_and_show_rows()
     {
         // バインディング失敗を捕捉する準備
         PresentationTraceSources.Refresh();
@@ -61,32 +73,37 @@ public class MainWindowBindingTests
         MainWindow? window = null;
         try
         {
-            var vm = CreateViewModelWith(
-                new ProductDto("A-1", "ねじ", 5),
-                new ProductDto("B-2", "ボルト", 0));
+            var vm = CreateMainViewModel();
             window = new MainWindow(vm)
             {
-                Width = 720,
-                Height = 450,
+                Width = 760,
+                Height = 480,
                 // 画面の邪魔をしないよう画面外に出して表示する。
                 WindowStartupLocation = WindowStartupLocation.Manual,
                 Left = -10000,
                 Top = -10000,
                 ShowInTaskbar = false,
             };
-
-            // DataGrid の行(セル)を実体化させるには実描画が要る。Show して描画パスを回す。
             window.Show();
             DrainDispatcher();
 
-            await vm.LoadAsync();
+            await vm.Products.LoadAsync();
+            await vm.Orders.LoadAsync();
 
-            // 行とセルのバインディングを確定させる
-            window.UpdateLayout();
-            DrainDispatcher();
+            // 各タブを順に選択して、両タブのセル(列)バインディングを実体化させる。
+            var tabs = (TabControl)window.FindName("MainTabs")!;
+            for (var i = 0; i < tabs.Items.Count; i++)
+            {
+                tabs.SelectedIndex = i;
+                window.UpdateLayout();
+                DrainDispatcher();
+            }
 
-            var grid = (DataGrid)window.FindName("ProductsGrid")!;
-            Assert.Equal(2, grid.Items.Count);
+            // 行数の確認(ItemsSource バインディングが生きている証拠)
+            var productsGrid = (DataGrid)window.FindName("ProductsGrid")!;
+            var ordersGrid = (DataGrid)window.FindName("OrdersGrid")!;
+            Assert.Equal(2, productsGrid.Items.Count);
+            Assert.Equal(1, ordersGrid.Items.Count);
 
             Assert.True(
                 listener.Messages.Count == 0,
