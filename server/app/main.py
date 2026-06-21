@@ -73,6 +73,11 @@ class StockChange(BaseModel):
     amount: int = Field(ge=1)
 
 
+class InventorySummaryOut(BaseModel):
+    product_count: int
+    total_quantity: int
+
+
 # --- エンドポイント ---
 @app.post("/products", response_model=ProductOut, status_code=201)
 def register_product(
@@ -92,6 +97,18 @@ def list_products(
     repo: ProductRepository = Depends(get_repository),
 ) -> list[Product]:
     return repo.list_all()
+
+
+# 注意: "/products/{sku}" より前に登録する(後だと "summary" が sku として解釈される)。
+@app.get("/products/summary", response_model=InventorySummaryOut)
+def inventory_summary(
+    repo: ProductRepository = Depends(get_repository),
+) -> InventorySummaryOut:
+    products = repo.list_all()
+    return InventorySummaryOut(
+        product_count=len(products),
+        total_quantity=sum(p.quantity for p in products),
+    )
 
 
 def _get_or_404(repo: ProductRepository, sku: str) -> Product:
