@@ -56,6 +56,25 @@ def test_negative_quantity_is_422(client):
     assert res.status_code == 422
 
 
+# --- 商品名の変更 (#0020) ---
+def test_rename_product_updates_name(client):
+    client.post("/products", json={"sku": "A-1", "name": "ねじ", "quantity": 1})
+    res = client.put("/products/A-1", json={"name": "なべ"})
+    assert res.status_code == 200
+    assert res.json()["name"] == "なべ"
+
+
+def test_rename_unknown_is_404(client):
+    res = client.put("/products/NOPE", json={"name": "x"})
+    assert res.status_code == 404
+
+
+def test_rename_empty_name_is_422(client):
+    client.post("/products", json={"sku": "A-1", "name": "ねじ"})
+    res = client.put("/products/A-1", json={"name": ""})
+    assert res.status_code == 422
+
+
 # --- 在庫サマリ (#0019) ---
 def test_summary_empty_is_zero(client):
     res = client.get("/products/summary")

@@ -78,6 +78,10 @@ class InventorySummaryOut(BaseModel):
     total_quantity: int
 
 
+class ProductRename(BaseModel):
+    name: str = Field(min_length=1)
+
+
 # --- エンドポイント ---
 @app.post("/products", response_model=ProductOut, status_code=201)
 def register_product(
@@ -124,6 +128,18 @@ def get_product(
     repo: ProductRepository = Depends(get_repository),
 ) -> Product:
     return _get_or_404(repo, sku)
+
+
+@app.put("/products/{sku}", response_model=ProductOut)
+def rename_product(
+    sku: str,
+    body: ProductRename,
+    repo: ProductRepository = Depends(get_repository),
+) -> Product:
+    product = _get_or_404(repo, sku)
+    product.name = body.name
+    repo.update(product)
+    return product
 
 
 @app.post("/products/{sku}/receive", response_model=ProductOut)
