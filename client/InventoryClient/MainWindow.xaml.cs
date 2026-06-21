@@ -1,5 +1,6 @@
 using System.Net.Http;
 using System.Windows;
+using System.Windows.Controls;
 using InventoryClient.Core.Api;
 using InventoryClient.Core.ViewModels;
 
@@ -20,6 +21,28 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         DataContext = viewModel;
+
+        // 表示中タブを自動で読み込む(起動時 + タブ切り替え時)。手動「読み込み」は補助として残す。
+        MainTabs.SelectionChanged += OnTabSelectionChanged;
+        Loaded += (_, _) => RefreshSelectedTab();
+    }
+
+    private void OnTabSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        // 子コントロール由来の SelectionChanged は無視し、タブ自体の切り替えだけ拾う。
+        if (e.Source is TabControl)
+        {
+            RefreshSelectedTab();
+        }
+    }
+
+    private void RefreshSelectedTab()
+    {
+        if (MainTabs.SelectedItem is TabItem { DataContext: IRefreshableViewModel vm })
+        {
+            // fire-and-forget。失敗は ViewModel 内で ErrorMessage に出る。
+            _ = vm.LoadAsync();
+        }
     }
 
     private static MainViewModel CreateDefaultViewModel()

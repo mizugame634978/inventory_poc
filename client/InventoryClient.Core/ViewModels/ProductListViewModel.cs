@@ -10,7 +10,7 @@ namespace InventoryClient.Core.ViewModels;
 /// 商品一覧画面の状態とふるまい。View(XAML)はこの ViewModel をバインドするだけで、ロジックを持たない。
 /// WPF アセンブリに依存しないため、テストプロジェクト(net10.0)からそのまま検証できる。
 /// </summary>
-public partial class ProductListViewModel : ObservableObject
+public partial class ProductListViewModel : ObservableObject, IRefreshableViewModel
 {
     private readonly IProductApiClient _api;
 
