@@ -6,11 +6,16 @@
         xmlns:local="clr-namespace:InventoryClient"
         mc:Ignorable="d"
         Title="在庫 - 商品 / 発注" Height="480" Width="760">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
     <TabControl x:Name="MainTabs" Margin="8">
 
         <!-- 商品タブ: DataContext は ProductListViewModel -->
         <TabItem Header="商品" DataContext="{Binding Products}">
             <DockPanel Margin="8">
+                <ProgressBar DockPanel.Dock="Top" IsIndeterminate="True" Height="4" Margin="0,0,0,6"
+                             Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"/>
                 <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                         <Button Content="読み込み" Command="{Binding LoadCommand}" Width="90" Margin="0,0,12,0"/>
@@ -44,6 +49,8 @@
         <!-- 発注タブ: DataContext は PurchaseOrderViewModel -->
         <TabItem Header="発注" DataContext="{Binding Orders}">
             <DockPanel Margin="8">
+                <ProgressBar DockPanel.Dock="Top" IsIndeterminate="True" Height="4" Margin="0,0,0,6"
+                             Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"/>
                 <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                         <Button Content="読み込み" Command="{Binding LoadCommand}" Width="90" Margin="0,0,12,0"/>
