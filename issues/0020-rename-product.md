@@ -1,6 +1,6 @@
 # #0020 商品名の変更 (PUT /products/{sku})
 
-- status: open
+- status: done
 - created: 2026-06-21
 
 ## スコープ
@@ -16,6 +16,6 @@
 検証: `pwsh -File scripts/check.ps1` 緑。
 
 ## 結果(完了時に追記)
-- done:
-- 要点:
-- commits:
+- done: 2026-06-21
+- 要点: PUT /products/{sku} 追加(name変更, 404/422)。test3件。server pytest 38件緑。/loop自走。
+- commits: ブランチ issue-0020-rename-product
