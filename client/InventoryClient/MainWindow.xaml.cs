@@ -25,7 +25,8 @@ public partial class MainWindow : Window
     private static MainViewModel CreateDefaultViewModel()
     {
         // POC: サーバは fastapi dev の既定ポート 8000 を想定。商品・発注で HttpClient を共有する。
-        var http = new HttpClient { BaseAddress = new Uri("http://localhost:8000") };
+        // localhost ではなく 127.0.0.1 を使う(localhost は IPv6 ::1 を先に試して 1 秒ほど待つことがある)。
+        var http = new HttpClient { BaseAddress = new Uri("http://127.0.0.1:8000") };
         var products = new ProductListViewModel(new ProductApiClient(http));
         var orders = new PurchaseOrderViewModel(new PurchaseOrderApiClient(http));
         return new MainViewModel(products, orders);
