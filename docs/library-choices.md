@@ -67,6 +67,31 @@ Prismなら `OnNavigatedTo` 標準フックで賄え、code-behindも自作inter
 モジュール性・画面ライフサイクル多用が出た瞬間に Prism region のレバレッジが効き始める。
 今回は OnNavigatedTo 相当を約10行の自前コードで賄えてしまう規模だった。
 
+## 深掘り: ドキュメント自動生成(API/ER)について
+
+### API ドキュメント — 別途生成しなかった(=不要だった)
+- FastAPI が **OpenAPI + Swagger UI(`/docs`)・ReDoc(`/redoc`) を内蔵生成**。サーバ起動で常に最新が
+  見られ、コードと乖離しない。追加作業ゼロ。
+- 加えて `docs/data-model.md` に**手書きのエンドポイント表**(人間向けトップダウン要約)。
+- → 「自動(Swagger)＋人間向け要約(手書き)」で揃い、別生成の対象が無かった。
+
+### ER 図 — 自動生成しなかった理由
+1. **OpenAPIと違い、DBスキーマには内蔵生成が無い**。ER自動生成は外部に頼る必要がある。
+2. **ORMなし(生sqlite3)** のため、モデルからの生成(SQLAlchemy + eralchemy 等)が使えない。
+   稼働DBから生成する手もあるが外部ツール＋DB実体が要る＝重い。
+3. **FK制約を宣言していない**(`PurchaseOrder.sku`→`Product.sku` は規約のみ)。よって自動生成しても
+   関係線が描かれない。むしろ手書きER(`data-model.md`)の方が概念関係を表現できた。
+4. 2テーブルの小規模POCで、手書きで十分だった。
+- 弱点(正直に): **手書きERはスキーマと乖離し得る**(FK未宣言で強制もされない)。
+
+### 製品化時の推奨(結論)
+実際に導入する段階では:
+- **SQLAlchemy(ORM)を採用**し、**FK制約を宣言**する。
+- それを基に **ER図を自動生成**(例: eralchemy/sqlalchemy-schemadisplay、またはスキーマから)し、
+  コードとの乖離を無くす。
+- 軽量な中間案として、手書きでも **Mermaid `erDiagram`**(依存ゼロ・GitHubが描画)にしておくと
+  ASCIIより保守しやすい。
+
 ## 総括(正直な自己評価)
 - 強い理由で選定: uv / CommunityToolkit.Mvvm / Xunit.StaFact / stdlib sqlite / 3分割。
 - 慣習デフォルト寄り(どれでも可): xUnit / NSubstitute。
